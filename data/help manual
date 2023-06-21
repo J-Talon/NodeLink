@@ -1,0 +1,68 @@
+Commands
+Default prefix for me is !
+This manual shows commands with the default prefix. If you are using a custom prefix,
+please replace the ! with the one you are using.
+
+Recipe:
+Adds a recipe to the tracker. If the recipe exists, it it overwritten.
+Syntax: !recipe <name> <ingredients> = <result>
+Where:
+- name: Name of the recipe
+- ingredients: Ingredients in the recipe. Include the number of each with -n
+- result: The item resulting from the recipe. Include number with -n
+Example: !recipe cake flour-2 milk-1 chocolate-1 = chocolate_cake
+
+Delete:
+Deletes a recipe from the tracker by name. If multiple names are included, they will all be deleted.
+Syntax: !delete <name1> [name2] ...
+Where:
+- name1: Name of the recipe, required
+- name2...: Name of the recipe, optional
+Example: !delete cake
+
+Calculate:
+Calculates the ingredients required for a recipe.
+Syntax: !calculate <name> <number> [layers]
+Where:
+- name: Name of the recipe
+- number: The number of the output items to calculate. Must be >= 1.
+- layers: The layers down the recipe to calculate. Max of 25, must be >= 1.
+If there are branching options, the bot will
+ask you for the recipe to follow.
+Example: !calculate cake 1 3
+
+Get:
+Gets a recipe from the tracker by name and shows the recipe.
+Syntax: !get <name>
+Where:
+- name: Name of the recipe
+Example: !get cake
+
+List:
+Lists all of the recipes in the tracker for the current server.
+Syntax: !list
+Example: !list
+
+Clear_Calculation:
+Clears the current branching calculation in the cache.
+Syntax: !clear_calculation
+
+Choose_Recipe:
+Choose the recipe you want the current branching calculation to follow.
+Syntax: !choose_recipe <name>
+Where:
+- name: Name of the recipe to choose
+Example: !choose_recipe cake
+
+Set_Prefix:
+Sets my command prefix.
+Syntax: !set_prefix <prefix>
+Where -prefix: My new prefix
+Example: !set_prefix -
+
+
+Help:
+Displays this manual.
+Syntax: !help
+
+
