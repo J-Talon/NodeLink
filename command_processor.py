@@ -2,7 +2,7 @@
 from discord import User, Member
 import discord.abc
 
-import layer_data
+
 import recipe_handler
 from message_context import MessageContext
 import message_sender
@@ -10,11 +10,10 @@ from discord import Embed
 from discord import Colour
 import os
 
-from items import Recipe, Item, RecipeWrapper
+from items import Recipe, Item
 import item_generator
 
 
-from layer_data import LayerInputData
 
 
 prefixes = dict()
@@ -48,7 +47,7 @@ async def chippy_command(content: MessageContext):
     channel = message.channel
 
     if user.id == 753048923655897100:
-        await message_sender.send_message("Hi Dev!",channel)
+        await message_sender.send_message("Hiya Chippy! How ya doin'?",channel)
     else:
         await message_sender.send_message("Hi "+str(user.name)+"!",channel)
 
@@ -174,76 +173,17 @@ async def delete_recipes(content: MessageContext):
     if not (prefix == content.prefix):
         return
 
+    del_list = ""
     for arg in content.args:
 
         try:
             recipe_handler.delete_recipe(content.message.guild.id, arg)
-            await message_sender.send_message("Deleted "+arg+".", content.message.channel)
+            del_list = del_list + arg +" "
 
         except ValueError | LookupError:
             await message_sender.send_message("Recipe "+arg+" not found.", content.message.channel)
 
-async def calculate_recipe(content: MessageContext):
-    prefix: str = get_prefix_for_server(content.message)
-    if not (prefix == content.prefix):
-        return
-
-    args: str = content.args
-
-    if args is None:
-        await message_sender.send_message("Requires 3 arguments. None given.", content.message.channel)
-        return
-
-
-    if not len(args) == 3:
-        await message_sender.send_message("Require 3 arguments, you gave "+str(len(args)),content.message.channel)
-        return
-
-    try:
-        name: str = args[0]
-        amount = item_generator.to_pos_int(args[1])
-        if amount is None:
-            await message_sender.send_message("Invalid param for layers or amount.", content.message.channel)
-            return
-
-
-        layers = item_generator.to_pos_int(args[2])
-        if layers is None:
-            await message_sender.send_message("Invalid param for layers or amount.", content.message.channel)
-            return
-
-        if layers > 25:
-            await message_sender.send_message("Max layers is 25.",content.message.channel)
-            return
-
-        layers = layers - 1
-
-        sid:int = content.message.guild.id
-        recipe: Recipe = recipe_handler.get_recipe(sid, name)
-        if recipe is None:
-            await message_sender.send_message("Recipe not found.", content.message.channel)
-            return
-
-        data_for_layer:LayerInputData =  LayerInputData(sid, layers,[RecipeWrapper(amount, recipe)],content.message.channel)
-        add_to_cache: bool = await data_for_layer.update_return_result()
-        if add_to_cache:
-            layer_data.add_to_cache(content.message.author.id,data_for_layer)
-
-    except ValueError:
-        await message_sender.send_message("Parameters for amount or layers is invalid.", content.message.channel)
-        return
-
-
-async def clear_cache(content: MessageContext):
-    prefix: str = get_prefix_for_server(content.message)
-    if not (prefix == content.prefix):
-        return
-
-    cid: int = content.message.author.id
-    if layer_data.contains_cid(cid):
-        layer_data.remove_from_cache(cid)
-    await message_sender.send_message("Removed your previous calculation from the cache.",content.message.channel)
-
+    await message_sender.send_message("Deleted recipes: " +del_list+ ".", content.message.channel)
 
 async def order_66(content: MessageContext):
     prefix: str = get_prefix_for_server(content.message)
@@ -267,52 +207,6 @@ async def order_66(content: MessageContext):
     await delete_recipes(content)
     await message_sender.send_message("**All recipes have been purged my lord.**", content.message.channel)
 
-
-
-async def choose_recipe(content: MessageContext):
-    prefix: str = get_prefix_for_server(content.message)
-    if not (prefix == content.prefix):
-        return
-
-    if not len(content.args) == 1:
-        await message_sender.send_message("Requires 1 argument.", content.message.channel)
-        return
-
-    cid:int = content.message.author.id
-    sid: int = content.message.guild.id
-
-    if not layer_data.contains_cid(cid):
-        await message_sender.send_message("You have no on-going calculation.", content.message.channel)
-        return
-
-    cache_data:LayerInputData = layer_data.get_from_cache(cid,sid)
-    if cache_data is None:
-        await message_sender.send_message("Please reply in the correct server or clear the ongoing calculation.", content.message.channel)
-        return
-
-    recipe: Recipe = recipe_handler.get_recipe(sid,content.args[0])
-    if recipe is None:
-        await message_sender.send_message("Recipe not found.", content.message.channel)
-        return
-
-    possible_recipes: [Recipe] = cache_data.get_branch()
-    if recipe in possible_recipes:
-        await cache_data.choose_branch(recipe)
-        layer_data.remove_from_cache(cid)
-
-        cache_again = await cache_data.update_return_result()
-        if cache_again:
-            layer_data.add_to_cache(cid, cache_data)
-
-
-    else:
-        choices = ""
-        for i in possible_recipes:
-            choices = choices + i.to_string()
-        choices = "```" + choices + "```"
-        await message_sender.send_message(choices, content.message.channel)
-
-
 async def prefix_set(content: MessageContext):
     prefix: str = get_prefix_for_server(content.message)
     if not (prefix == content.prefix):
@@ -322,14 +216,131 @@ async def prefix_set(content: MessageContext):
         await message_sender.send_message("1 argument only.", content.message.channel)
         return
 
+    if content.args[0] == "/":
+        await message_sender.send_message("Cannot use / as it may conflict with slash commands", content.message.channel)
+        return
+
     set_prefix(content.message, content.args[0])
     await message_sender.send_message("Set my prefix to "+get_prefix_for_server(content.message),content.message.channel)
 
 
 async def print_prefix(message: discord.Message):
-    await message_sender.send_message("Hi! My prefix here is: "+get_prefix_for_server(message),message.channel)
+    prefix = get_prefix_for_server(message)
+    await message_sender.send_message("Hi! My prefix here is: "+prefix
+                                      +"\n Use "+prefix+"help for my manual.",message.channel)
 
 
 
 
+
+async def create_calculation(content: MessageContext):
+
+    if content.args is None:
+        await message_sender.send_message("Requires 1 argument", content.message.channel)
+        return
+
+    if not len(content.args) == 1:
+        await message_sender.send_message("1 argument only.", content.message.channel)
+        return
+
+    recipe_name = content.args[0]
+    server_id = content.message.guild.id
+    user_id = content.message.author.id
+
+    recipe = recipe_handler.get_recipe(server_id, recipe_name)
+    if recipe is None:
+        await message_sender.send_message("Could not find recipe " + recipe_name, content.message.channel)
+        return None
+
+    await recipe_handler.add_calculation(recipe, user_id, server_id, content)
+
+
+
+
+async def add_node_child(content: MessageContext):
+
+    if content.args is None:
+        await message_sender.send_message("Command requires 2 arguments", content.message.channel)
+        return
+
+
+    if not len(content.args) == 2:
+        await message_sender.send_message("Command requires parent node, child node (2 args)", content.message.channel)
+        return
+
+    parent_node = content.args[0]
+    child_node = content.args[1]
+
+    server_id = content.message.guild.id
+    child_recipe = recipe_handler.get_recipe(server_id, child_node)
+    user_id = content.message.author.id
+
+    if child_recipe is None:
+        await message_sender.send_message("Could not find recipe "+child_node, content.message.channel)
+        return
+
+    await recipe_handler.add_node(user_id,server_id,parent_node,child_recipe,content)
+
+
+async def clear_calculation(content: MessageContext):
+    await recipe_handler.delete_calculation(content)
+
+
+async def delete_node(content: MessageContext):
+    if content.args is None:
+        await message_sender.send_message("Require 1 argument", content.message.channel)
+        return
+
+    if len(content.args) != 1:
+        await message_sender.send_message("Require 1 argument", content.message.channel)
+        return
+
+    node_key = content.args[0]
+    await recipe_handler.delete_node(node_key, content)
+
+
+async def print_node(content: MessageContext):
+    if content.args is None:
+        await message_sender.send_message("Requires 1 argument", content.message.channel)
+        return
+
+    if len(content.args) != 1:
+        await message_sender.send_message("Requires 1 argument", content.message.channel)
+        return
+
+    await recipe_handler.get_node_info(content.args[0], content)
+
+
+async def print_tree(content: MessageContext):
+    user_id = content.message.author.id
+    server_id = content.message.guild.id
+
+    cid = str(user_id)+str(server_id)
+    await recipe_handler.print_tree(cid, content)
+
+
+async def calculate(content: MessageContext):
+
+    if content.args is None:
+        await message_sender.send_message("1 argument only.", content.message.channel)
+        return
+
+    if len(content.args) != 1:
+        await message_sender.send_message("1 argument only.", content.message.channel)
+        return
+
+    user_id = content.message.author.id
+    server_id = content.message.guild.id
+
+    cid = str(user_id)+str(server_id)
+
+    try:
+        amount = int(content.args[0])
+        if amount < 1:
+            await message_sender.send_message("Amount must be at least 1", content.message.channel)
+            return
+
+        await recipe_handler.start_calculation(cid, amount, content)
+    except ValueError:
+        pass
 

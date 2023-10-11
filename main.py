@@ -37,6 +37,7 @@ def run_bot():
             if message.author == client.user:
                 return
 
+
             await messager.await_message(message,client.user)
 
         except Exception as err:

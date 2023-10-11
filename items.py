@@ -23,6 +23,7 @@ class Recipe:
         self.name = name
         self.result = result
         self.items = items
+        self.requirements_strings = []
 
     def get_result(self) -> Item:
         return self.result
@@ -32,6 +33,16 @@ class Recipe:
 
     def get_requirements(self) -> [Item]:
         return self.items
+
+    def get_requirement_names(self) -> [str]:
+        if not self.requirements_strings: # if the list is empty
+            for i in self.items:
+                 self.requirements_strings.append(i.get_name())
+
+        return self.requirements_strings
+
+
+
 
     def to_string(self) -> str:
         string = ""
@@ -50,8 +61,5 @@ class Recipe:
         return self.name +": "+ string + " -> " + self.result.to_string()
 
 
-class RecipeWrapper:
-    def __init__(self, amount:int, recipe: Recipe):
-        self.amount = amount
-        self.recipe = recipe
+
 

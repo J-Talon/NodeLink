@@ -16,4 +16,3 @@ async def send_message(message, channel):
         print(err.__cause__)
         print(err.__traceback__)
 
-
