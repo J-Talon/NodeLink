@@ -164,8 +164,6 @@ async def add_node(user_id: int, server_id: int, parent_node_key: str, recipe: R
             return
 
     if recipe.result.get_name() not in requirements:
-        print(recipe.result.get_name())
-        print(str(requirements))
         await message_sender.send_message(recipe.result.get_name()+" is not needed in "+parent_node.get_name()+".", content.message.channel)
         return
 

@@ -322,7 +322,7 @@ async def print_tree(content: MessageContext):
 async def calculate(content: MessageContext):
 
     if content.args is None:
-        await message_sender.send_message("1 argument only.", content.message.channel)
+        await message_sender.send_message("1 argument required.", content.message.channel)
         return
 
     if len(content.args) != 1:
@@ -342,5 +342,5 @@ async def calculate(content: MessageContext):
 
         await recipe_handler.start_calculation(cid, amount, content)
     except ValueError:
-        pass
+        await message_sender.send_message("The value must be a positive integer", content.message.channel)
 

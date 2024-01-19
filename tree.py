@@ -25,7 +25,6 @@ class Node:
             self.children.pop(recipe_name)
             node.set_parent(None)
         else:
-            print(recipe_name)
             for i in self.children.keys():
                 print(i)
 
